@@ -9,11 +9,40 @@
 #import "SDKManager.h"
 #import "SDKViewController.h"
 
-@interface SDKManager()<SDKViewControllerDelegate>
+#import <objc/runtime.h>
 
+@interface SDKManager()<SDKViewControllerDelegate>
+@property (nonatomic, assign) NSUInteger plistSupportedOrientation;
 @end
 
 @implementation SDKManager
+
+-(NSUInteger) plistSupportedOrientation {
+    if (_plistSupportedOrientation == 0) {
+        NSArray *supported = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"UISupportedInterfaceOrientations"];
+        [supported enumerateObjectsUsingBlock:^(NSString *string, NSUInteger idx, BOOL *stop) {
+            if ([string caseInsensitiveCompare:@"UIInterfaceOrientationPortrait"] == NSOrderedSame) {
+                _plistSupportedOrientation |= UIInterfaceOrientationMaskPortrait;
+                
+            } else if ([string caseInsensitiveCompare:@"UIInterfaceOrientationPortraitUpsideDown"] == NSOrderedSame) {
+                _plistSupportedOrientation |= UIInterfaceOrientationMaskPortraitUpsideDown;
+                
+            } else if ([string caseInsensitiveCompare:@"UIInterfaceOrientationLandscapeLeft"] == NSOrderedSame) {
+                _plistSupportedOrientation |= UIInterfaceOrientationMaskLandscapeLeft;
+                
+            } else if ([string caseInsensitiveCompare:@"UIInterfaceOrientationLandscapeRight"] == NSOrderedSame) {
+                _plistSupportedOrientation |= UIInterfaceOrientationMaskLandscapeRight;
+                
+            }
+        }];
+        
+        // No orientation written in plist. It means all orientations are supported.
+        if (_plistSupportedOrientation == 0) {
+            _plistSupportedOrientation = NSUIntegerMax;
+        }
+    }
+    return _plistSupportedOrientation;
+}
 
 + (instancetype)shared
 {
@@ -36,6 +65,14 @@
     [viewController dismissViewControllerAnimated:YES completion:^{
         self.isShowing = NO;
     }];
+}
+
+-(NSUInteger)sdk_application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
+    if ([SDKManager shared].isShowing) {
+        return [[SDKManager shared] plistSupportedOrientation];
+    } else {
+        return UIInterfaceOrientationMaskPortrait;
+    }
 }
 
 @end
