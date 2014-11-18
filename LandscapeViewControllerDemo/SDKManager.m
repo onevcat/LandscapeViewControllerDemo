@@ -75,4 +75,8 @@
     }
 }
 
+-(NSUInteger)sdk_default_application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
+    return [[SDKManager shared] plistSupportedOrientation];
+}
+
 @end
