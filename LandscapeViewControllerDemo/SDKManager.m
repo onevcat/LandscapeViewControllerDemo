@@ -71,7 +71,7 @@
     if ([SDKManager shared].isShowing) {
         return UIInterfaceOrientationMaskAll;
     } else {
-        return [[SDKManager shared] plistSupportedOrientation];
+        return [[SDKManager shared] sdk_application:application supportedInterfaceOrientationsForWindow:window];
     }
 }
 
