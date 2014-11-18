@@ -17,7 +17,7 @@
 
 @implementation SDKManager
 
--(NSUInteger) plistSupportedOrientation {
+- (NSUInteger)plistSupportedOrientation {
     if (_plistSupportedOrientation == 0) {
         NSArray *supported = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"UISupportedInterfaceOrientations"];
         [supported enumerateObjectsUsingBlock:^(NSString *string, NSUInteger idx, BOOL *stop) {
@@ -50,6 +50,7 @@
     static id _shared = nil;
     dispatch_once(&onceToken, ^{
         _shared = [[self alloc] init];
+        [_shared swizzleSupportedInterfaceOrientationsForWindow];
     });
     return _shared;
 }
@@ -61,13 +62,40 @@
     [viewController presentViewController:sdkVc animated:YES completion:nil];
 }
 
--(void)sdkViewControllerDismissButtonPressed:(SDKViewController *)viewController {
+- (void)sdkViewControllerDismissButtonPressed:(SDKViewController *)viewController {
     [viewController dismissViewControllerAnimated:YES completion:^{
         self.isShowing = NO;
     }];
 }
 
--(NSUInteger)sdk_application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
+- (void)swizzleSupportedInterfaceOrientationsForWindow {
+    Class applicationDelegateClass = [[UIApplication sharedApplication].delegate class];
+    Class sdkClass = [self class];
+    
+    SEL originalSelector = @selector(application:supportedInterfaceOrientationsForWindow:);
+    SEL swizzledSelector = @selector(sdk_application:supportedInterfaceOrientationsForWindow:);
+    
+    Method originalMethod = class_getInstanceMethod(applicationDelegateClass, originalSelector);
+    
+    // No implement for -application:supportedInterfaceOrientationsForWindow:
+    // Add the default one
+    if (originalMethod == NULL) {
+        SEL defaultSelector = @selector(sdk_default_application:supportedInterfaceOrientationsForWindow:);
+        Method defaultMethod = class_getInstanceMethod(sdkClass, defaultSelector);
+        
+        class_addMethod(applicationDelegateClass,
+                        originalSelector,
+                        method_getImplementation(defaultMethod),
+                        method_getTypeEncoding(defaultMethod));
+        
+        originalMethod = class_getInstanceMethod(applicationDelegateClass, originalSelector);
+    }
+    
+    Method swizzledMethod = class_getInstanceMethod(sdkClass, swizzledSelector);
+    method_exchangeImplementations(originalMethod, swizzledMethod);
+}
+
+- (NSUInteger)sdk_application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
     if ([SDKManager shared].isShowing) {
         return [[SDKManager shared] plistSupportedOrientation];
     } else {
@@ -75,7 +103,7 @@
     }
 }
 
--(NSUInteger)sdk_default_application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
+- (NSUInteger)sdk_default_application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
     return [[SDKManager shared] plistSupportedOrientation];
 }
 
