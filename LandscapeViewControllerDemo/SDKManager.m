@@ -97,9 +97,9 @@
 
 - (NSUInteger)sdk_application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
     if ([SDKManager shared].isShowing) {
-        return [[SDKManager shared] plistSupportedOrientation];
+        return UIInterfaceOrientationMaskAll;
     } else {
-        return UIInterfaceOrientationMaskPortrait;
+        return [[SDKManager shared] plistSupportedOrientation];
     }
 }
 
