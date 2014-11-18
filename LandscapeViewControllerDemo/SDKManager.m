@@ -13,6 +13,7 @@
 
 @interface SDKManager()<SDKViewControllerDelegate>
 @property (nonatomic, assign) NSUInteger plistSupportedOrientation;
+@property (nonatomic, strong) id<UIApplicationDelegate> appDelegate;
 @end
 
 @implementation SDKManager
@@ -89,6 +90,10 @@
                         method_getTypeEncoding(defaultMethod));
         
         originalMethod = class_getInstanceMethod(applicationDelegateClass, originalSelector);
+        
+        self.appDelegate = [UIApplication sharedApplication].delegate;
+        [UIApplication sharedApplication].delegate = nil;
+        [UIApplication sharedApplication].delegate = self.appDelegate;
     }
     
     Method swizzledMethod = class_getInstanceMethod(sdkClass, swizzledSelector);
