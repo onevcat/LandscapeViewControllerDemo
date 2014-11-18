@@ -28,12 +28,14 @@
 - (void)openInViewController:(UIViewController *)viewController {
     SDKViewController *sdkVc = [SDKViewController new];
     sdkVc.delegate = self;
-    
+    self.isShowing = YES;
     [viewController presentViewController:sdkVc animated:YES completion:nil];
 }
 
 -(void)sdkViewControllerDismissButtonPressed:(SDKViewController *)viewController {
-    [viewController dismissViewControllerAnimated:YES completion:nil];
+    [viewController dismissViewControllerAnimated:YES completion:^{
+        self.isShowing = NO;
+    }];
 }
 
 @end

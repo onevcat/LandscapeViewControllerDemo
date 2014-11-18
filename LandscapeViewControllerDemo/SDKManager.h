@@ -10,6 +10,8 @@
 
 @interface SDKManager : NSObject
 
+@property (nonatomic, assign) BOOL isShowing;
+
 + (instancetype)shared;
 - (void)openInViewController:(UIViewController *)viewController;
 @end
